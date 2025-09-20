@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout the repo
+      # 1️⃣ Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -33,39 +33,26 @@ jobs:
       - name: Push Docker image
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/wisecow:latest
 
-      # 6️⃣ Install Minikube
-      - name: Install Minikube
-        run: |
-          curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-          sudo install minikube-linux-amd64 /usr/local/bin/minikube
-
-      # 7️⃣ Start Minikube
-      - name: Start Minikube
-        run: |
-          minikube start --driver=docker --kubernetes-version=v1.34.0
-          minikube status
-
-      # 8️⃣ Set up kubectl
+      # 6️⃣ Set up kubectl
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
         with:
           version: 'latest'
 
-      # 9️⃣ Configure kubeconfig from Minikube
+      # 7️⃣ Configure kubeconfig from GitHub Secret
       - name: Configure kubeconfig
         run: |
           mkdir -p $HOME/.kube
-          minikube kubectl -- get nodes
-          minikube kubeconfig > $HOME/.kube/config
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode > $HOME/.kube/config
           echo "Contents of .kube folder:"
           ls -la $HOME/.kube
 
-      # 🔟 Test kubectl
-      - name: Test kubectl connection
+      # 8️⃣ Test kubectl
+      - name: Test kubectl
         run: kubectl get nodes
 
-      # 1️⃣1️⃣ Deploy to Minikube
-      - name: Deploy to Minikube
+      # 9️⃣ Deploy to Kubernetes
+      - name: Deploy to Kubernetes
         run: |
           kubectl apply -f k8s/deployment.yaml
           kubectl apply -f k8s/service.yaml
