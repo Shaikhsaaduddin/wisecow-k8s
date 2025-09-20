@@ -38,8 +38,30 @@ jobs:
         with:
           version: 'latest'
 
-      - name: Configure kubeconfig
-        run: echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
+      - name: Configure kubeconfig safely
+        run: |
+          KUBECONFIG_DIR="$HOME/.kube"
+          mkdir -p $KUBECONFIG_DIR
+          
+          # Check if secret exists
+          if [ -z "${{ secrets.KUBE_CONFIG }}" ]; then
+            echo "ERROR: KUBE_CONFIG secret is empty!"
+            exit 1
+          fi
+          
+          # Decode secret into a temporary file
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode > $KUBECONFIG_DIR/temp_config
+          
+          # Move to config
+          mv $KUBECONFIG_DIR/temp_config $KUBECONFIG_DIR/config
+          
+          # Debug: list folder
+          echo "Contents of .kube folder:"
+          ls -la $KUBECONFIG_DIR
+
+      - name: Test kubectl connection
+        run: |
+          kubectl get nodes
 
       - name: Deploy to Minikube
         run: |
