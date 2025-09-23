@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: Deploy Wisecow to EKS
 
 on:
   push:
@@ -14,23 +14,13 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-south-1   # <-- change to your region
-
-      - name: Install kubectl
-        run: |
-          curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.29.0/2024-07-05/bin/linux/amd64/kubectl
-          chmod +x ./kubectl
-          sudo mv ./kubectl /usr/local/bin/kubectl
+          aws-region: ap-south-1   # 👈 change if your EKS is in another region
 
       - name: Update kubeconfig for EKS
         run: |
-          aws eks update-kubeconfig \
-            --region ap-south-1 \        # <-- change to your region
-            --name my-cluster            # <-- change to your EKS cluster name
-
-      - name: Test Kubernetes connection
-        run: kubectl get nodes
+          aws eks update-kubeconfig --name <YOUR-CLUSTER-NAME> --region ap-south-1
+          kubectl get nodes
