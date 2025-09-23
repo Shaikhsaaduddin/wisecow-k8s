@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: wisecow-deployment
+  name: wisecow
   labels:
     app: wisecow
 spec:
@@ -16,6 +16,24 @@ spec:
     spec:
       containers:
       - name: wisecow
-        image: <your-dockerhub-username>/wisecow:latest
+        image: ghcr.io/<YOUR_ORG>/wisecow:latest   # replace with your registry/image
+        imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 8080
+        - containerPort: 4499
+        resources:
+          requests:
+            cpu: "50m"
+            memory: "64Mi"
+          limits:
+            cpu: "250m"
+            memory: "256Mi"
+        readinessProbe:
+          tcpSocket:
+            port: 4499
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        livenessProbe:
+          tcpSocket:
+            port: 4499
+          initialDelaySeconds: 20
+          periodSeconds: 20
